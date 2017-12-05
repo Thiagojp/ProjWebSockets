@@ -19,11 +19,7 @@ import javax.websocket.server.ServerEndpoint;
 public class chat {
 
 	static Set<Session> Usuarios = Collections.synchronizedSet(new HashSet<Session>());
-	Date date = new Date();
-	SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
-	Calendar data = Calendar.getInstance();
-	int horas = data.get(Calendar.HOUR_OF_DAY);
-	int minutos = data.get(Calendar.MINUTE);
+	
 
 	@OnOpen
 	public void onOpen(Session ses) throws IOException {
@@ -33,45 +29,98 @@ public class chat {
 
 	@OnMessage
 	public void onMessage(String message, Session ses) throws IOException {
+		Date date = new Date();
+		SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
+		Calendar data = Calendar.getInstance();
+		int horas = data.get(Calendar.HOUR_OF_DAY);
+		int minutos = data.get(Calendar.MINUTE);
+		//int segundos =data.get(Calendar.SECOND);
 
-             String username= (String) ses.getUserProperties().get("usuario");
-             
-             if(username==null){
-            	 ses.getUserProperties().put("usuario", message);
-            	 for(Session s : Usuarios){
-            		 s.getBasicRemote().sendText("Usuario: " +message+" foi adicionado ao chat");		 
-            	 }
-           
-             }else if (message.toLowerCase().startsWith("send -all ")) 
-				{
-					String msg = message.substring(10, message.length());
-					for(Session s : Usuarios){
-	            		 s.getBasicRemote().sendText(username+": "+msg+ " " + horas
-									+ "h" + minutos + " " + formatador.format(date));		 
-	            	 }
+		String username = (String) ses.getUserProperties().get("usuario");
+
+		if (username == null) {
+			ses.getUserProperties().put("usuario", message);
+			for (Session s : Usuarios) {
+				s.getBasicRemote().sendText("Usuario: " + message + " foi adicionado ao chat");
+			}
+//ENVIAR PARA TODOS
+		} else if (message.toLowerCase().startsWith("send -all ")) {
+			String msg = message.substring(10, message.length());
+			for (Session s : Usuarios) {
+				s.getBasicRemote()
+						.sendText(username + ": " + msg + " " + horas + "h" + minutos+ " " + formatador.format(date));
+			}
+//LISTAR USUARIOS
+		} else if (message.equals("list")) {
+			StringBuilder str = new StringBuilder();
+			// Iterator<Session> iterator =Usuarios.iterator();
+			for (Session c : Usuarios) {
+				str.append(c.getUserProperties().get("usuario").toString());
+				str.append(",");
+
+			}
+			str.delete(str.length() - 1, str.length());
+			ses.getBasicRemote().sendText("Nome dos usuarios: " + str.toString());
+//SAIR DO CHAT
+		} else if (message.equalsIgnoreCase("bye")) {
+			for (Session s : Usuarios) {
+				s.getBasicRemote().sendText("Usuario: " + username + " foi removido do chat");
+			}
+			ses.close();
+			Usuarios.remove(ses);
+//RENOMEAR NOME
+		} else if (message.toLowerCase().startsWith("rename")) {
+			String novonome = message.substring(message.indexOf(" "), message.length());
+			novonome=novonome.trim();
+			//System.out.println(novonome);
+			for (Session s : Usuarios) {
+				/*if (s.getUserProperties().get("usuario").equals(novonome)) {
+					ses.getBasicRemote().sendText("Usuario: " + novonome + " ja existe na lista");
+					break;
+				} else*/ if (s.getUserProperties().get("usuario").equals(novonome) == false) {
+					//Usuarios.remove(ses);
+					ses.getUserProperties().put("usuario", novonome);
+					String username1 = (String) ses.getUserProperties().get("usuario");
+					System.out.println("Passou aqui" + novonome);
+											//ses.getUserProperties().put("usuario", novonome);
+						for (Session se : Usuarios) {
+							se.getBasicRemote().sendText("Usuario: " + username1 + " alterou o nome para "+novonome+"");
+						}
 					
-				}else if (message.equals("list")) {
-					StringBuilder str = new StringBuilder();
-					//Iterator<Session> iterator =Usuarios.iterator();
-					for (Session c : Usuarios) {
-						str.append(c.getUserProperties().get("usuario").toString());
-						str.append(",");
-						
+				}
+			}
+		}
+			
+//MENSAGEM PRIVADA
+		 else if (message.toLowerCase().startsWith("send -user")) {
+			String[] msgArray = message.split(" ");
+			String nome = msgArray[2];
+			System.out.println(nome);
+			String mensagem = "";
+			for (int i = 0; i < msgArray.length; i++) {
+				if (i > 2) {
+					mensagem = mensagem + " " + msgArray[i];
+				}
+			}
+
+			for (Session s : Usuarios) {
+				if (s.getUserProperties().get("usuario").toString().equals(nome)) {
+					s.getBasicRemote().sendText(
+							username + ":" + mensagem + " " + horas + "h" + minutos + " " + formatador.format(date));
+					
+				} /*else  {
+					if(s.getUserProperties().get("usuario").toString().contains(nome)== false){
+					System.out.println(nome);
+					s.getBasicRemote().sendText("Usuario: " + nome + " nao existe na lista");
+					break;
 					}
-					str.delete(str.length() - 1, str.length());
-					ses.getBasicRemote().sendText("Nome dos usuarios: "+ str.toString());
-				
-				}else if(message.equalsIgnoreCase("bye")){
-					 for(Session s : Usuarios){
-	            		 s.getBasicRemote().sendText("Usuario: " +username+" foi removido do chat");		 
-	            	 }
-					 ses.close();
-					Usuarios.remove(ses);								
-             
-             }else{
-            	 ses.getBasicRemote().sendText("Comando Invalido");
-             }
-             
+				}*/
+
+			}
+
+		} else {
+			ses.getBasicRemote().sendText("Comando Invalido");
+		}
 	}
 
 	@OnClose
