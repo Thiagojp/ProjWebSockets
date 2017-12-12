@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
@@ -68,16 +69,16 @@ public class chat {
 		} else if (message.toLowerCase().startsWith("rename")) {
 			String novonome = message.substring(message.indexOf(" "), message.length());
 			novonome = novonome.trim();
-			boolean exist = false;
+			boolean existe = false;
 			for (Session s : Usuarios) {
 				if (s.getUserProperties().get("usuario").toString().equals(novonome)) {
-					exist = true;
+					existe = true;
 					ses.getBasicRemote().sendText("Usuario: " + novonome + " ja existe na lista");
 					break;					
 					
 				}
 			}
-				if (exist) {
+				if (existe) {
 					System.out.println("Nome quem recebe a msg" + username);
 				} else {
 					ses.getUserProperties().put("usuario", novonome);
@@ -94,7 +95,7 @@ public class chat {
 			String nome = msgArray[2];
 			System.out.println(nome);
 			String mensagem = "";
-			boolean exist = false;// vamos assumir que nao existe
+			boolean exis = false;// vamos assumir que nao existe
 			for (int i = 0; i < msgArray.length; i++) {
 				if (i > 2) {
 					mensagem = mensagem + " " + msgArray[i];
@@ -102,26 +103,32 @@ public class chat {
 			}
 			for (Session s : Usuarios) {
 				if (s.getUserProperties().get("usuario").toString().equals(nome)) {
-					exist = true;// existe
+					exis = true;// existe
 					s.getBasicRemote().sendText(
 							username + ":" + mensagem + " " + horas + "h" + minutos + " " + formatador.format(date));
 					break;// encontrou, nao precisa mais percorrer a lista
 				}
 			}
-			if (exist) {
-				System.out.println("Nome quem recebe a msg" + username);
+			if (exis) {
+				System.out.println("Nome quem recebe a msg" + username);// criei essa mensagem apenas para controle interno
 
 			} else {
-				ses.getBasicRemote().sendText("Usuario: " + nome + " nao existe na lista");
+				ses.getBasicRemote().sendText("Usuario: " + nome + " nao existe na lista");/// nao acha na lista o nome do usuario
 			}
 
 		} else {
 			ses.getBasicRemote().sendText("Comando Invalido");
 		}
-	}
-	
+	}	
 	@OnClose
-	public void onClose(Session session) {
+	public void onClose(Session session, CloseReason c) throws Throwable  {
 		Usuarios.remove(session);
+		String username = (String) session.getUserProperties().get("usuario");
+		if (username != null) {
+			for (Session s : Usuarios) {
+				s.getBasicRemote().sendText("Usuario: " + username + " foi removido do chat");
+			}
+		}
+		
 	}
 }
