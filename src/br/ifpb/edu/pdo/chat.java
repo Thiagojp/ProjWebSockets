@@ -37,7 +37,7 @@ public class chat {
 			ses.getUserProperties().put("usuario", message);//cada sessão que o usuário cria ele joga num map o nome como string e a mensagem como objeto
 			for (Session s : Usuarios) {
 				if (s.getUserProperties().get("usuario") != null) {
-					s.getBasicRemote().sendText("Usuario: " + message + " entrou do chat");
+					s.getBasicRemote().sendText("Usuario " + message + " entrou do chat");
 				}
 			}
 			
@@ -74,24 +74,21 @@ public class chat {
 			novonome = novonome.trim();
 			boolean existe = false;
 			for (Session s : Usuarios) {
-				if (s.getUserProperties().get("usuario").toString().equals(novonome)
-						&& s.getUserProperties().get("usuario") != null) {
+				if (s.getUserProperties().get("usuario").toString().equals(novonome) && s.getUserProperties().get("usuario") != null) {
 					existe = true;
-					ses.getBasicRemote().sendText("Usuario: " + novonome + " ja existe na lista");
+					ses.getBasicRemote().sendText("Usuario " + novonome + " ja existe na lista");
 					break;
 
 				}
 			}
-			if (existe) {
-				System.out.println("Nome quem recebe a msg" + username);
-			} else {
+			if (existe==false) {
 				ses.getUserProperties().put("usuario", novonome);
 				for (Session se : Usuarios) {
 					if (se.getUserProperties().get("usuario") != null) {
-						se.getBasicRemote().sendText("Usuario: " + username + " alterou o nome para " + novonome + "");
+						se.getBasicRemote().sendText("Usuario " + username + " alterou o nome para " + novonome + "");
 					}
 				}
-			}
+			} 
 
 		}
 		// MENSAGEM PRIVADA
@@ -114,11 +111,9 @@ public class chat {
 					break;// encontrou, nao precisa mais percorrer a lista
 				}
 			}
-			if (exis) {
-				System.out.println("Nome quem recebe a msg" + username);// criei essa mensagem apenas para controle interno
+			if (exis==false) {
+				ses.getBasicRemote().sendText("Usuario " + nome + " nao existe na lista");/// nao acha na lista o nome do usuario
 
-			} else {
-				ses.getBasicRemote().sendText("Usuario: " + nome + " nao existe na lista");/// nao acha na lista o nome do usuario
 			}
 
 		} else {
@@ -132,7 +127,7 @@ public class chat {
 		if (username != null) {
 			for (Session s : Usuarios) {
 				if (s.getUserProperties().get("usuario") != null) {
-					s.getBasicRemote().sendText("Usuario: " + username + " saiu do chat");
+					s.getBasicRemote().sendText("Usuario " + username + " saiu do chat");
 				}
 			}
 		}
