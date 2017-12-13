@@ -1,4 +1,4 @@
-package br.ifpb.edu.pdo;
+package br.ifpb.edu.pod;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
